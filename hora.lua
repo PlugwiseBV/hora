@@ -30,10 +30,10 @@ local function utcDate(stamp)
     return utcD
 end
 
-local localDateToStamp = os.time
-local function localDateToUTCDate(localDate) return utcDate(localDateToStamp(localDate)) end
+local localDateToTimestamp = os.time
+local function localDateToUTCDate(localDate) return utcDate(localDateToTimestamp(localDate)) end
 
-local function utcDateToStamp(utcD)
+local function utcDateToTimestamp(utcD)
     local stamp = os.time(utcD)
     stamp = stamp + offset(stamp)
     local calcHour, thisHour = utcDate(stamp).hour, tonumber(utcD.hour or 0)
@@ -47,17 +47,17 @@ local function utcDateToStamp(utcD)
     return stamp
 end
 
-local function utcDateToLocalDate(utcD)   return os.date('*t', utcDateToStamp(utcD)) end
+local function utcDateToLocalDate(utcD)   return os.date('*t', utcDateToTimestamp(utcD)) end
 
 -- Base functions are local for speed.
 local hora = {
-    offset              = offset,
-    localDate           = localDate,
-    utcDate             = utcDate,
-    localDateToStamp    = localDateToStamp,
-    localDateToUTCDate  = localDateToUTCDate,
-    utcDateToStamp      = utcDateToStamp,
-    utcDateToLocalDate  = utcDateToLocalDate,
+    offset                  = offset,
+    localDate               = localDate,
+    utcDate                 = utcDate,
+    localDateToTimestamp    = localDateToTimestamp,
+    localDateToUTCDate      = localDateToUTCDate,
+    utcDateToTimestamp      = utcDateToTimestamp,
+    utcDateToLocalDate      = utcDateToLocalDate,
 }
 
 function hora.ISO8601Date(stamp)
@@ -152,7 +152,7 @@ function hora.ISO8601DateToTimestamp(str)
         else
             -- To get UTC, we assume the date already is UTC and then subtract the specified offset.
             -- Finally, we add subsecond precision.
-            return hora.utcDateToStamp(d) - offset + subsecond
+            return hora.utcDateToTimestamp(d) - offset + subsecond
         end
     else
         return nil, "Please pass a string."
@@ -304,7 +304,7 @@ function hora.HTTPDateToTimestamp(date)
             if not d.month then
                 return nil, 'Could not parse month name. Should be Jan, Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov or Dec (case-insensitive).'
             else
-                return utcDateToStamp(d)
+                return utcDateToTimestamp(d)
             end
         end
     else

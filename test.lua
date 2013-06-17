@@ -41,25 +41,25 @@ for i, tz in ipairs(timezones) do
         local dt = ((thisUTCDate.hour - lastUTCDate.hour) * 60 + (thisUTCDate.min - lastUTCDate.min)) * 60 + (thisUTCDate.sec - lastUTCDate.sec)
         check(jump == dt or jump == (86400 + dt), "hora.utcDate fails for: "..stamp..' ('..os.date('%c', stamp).."); does not increase monotonically ("..dt.."; should be "..jump..")")
 
-        --  Test utcDateToStamp() in terms of utcDate()
-        ret = hora.utcDateToStamp(thisUTCDate)
+        --  Test utcDateToTimestamp() in terms of utcDate()
+        ret = hora.utcDateToTimestamp(thisUTCDate)
         --print(stamp, ret, os.date('%c', stamp), os.date('%c', ret), inter.hour, inter.min)
-        check(stamp == ret, "hora.utcDateToStamp fails for: "..stamp..'; is '..ret..' ('..os.date('%c', stamp)..')'..' ('..os.date('%c', ret)..')')
+        check(stamp == ret, "hora.utcDateToTimestamp fails for: "..stamp..'; is '..ret..' ('..os.date('%c', stamp)..')'..' ('..os.date('%c', ret)..')')
 
-        -- Test localDateToStamp() against os.date().
-        ret = hora.localDateToStamp(os.date('*t', stamp))
-        check(stamp == ret, "hora.localDateToStamp fails for: "..stamp..'; is '..ret..' ('..os.date('%c', stamp)..')')
+        -- Test localDateToTimestamp() against os.date().
+        ret = hora.localDateToTimestamp(os.date('*t', stamp))
+        check(stamp == ret, "hora.localDateToTimestamp fails for: "..stamp..'; is '..ret..' ('..os.date('%c', stamp)..')')
 
-        -- Test localDate() in terms of localDateToStamp()
-        ret = hora.localDateToStamp(hora.localDate(stamp))
+        -- Test localDate() in terms of localDateToTimestamp()
+        ret = hora.localDateToTimestamp(hora.localDate(stamp))
         check(stamp == ret, "hora.localDate fails for: "..stamp..'; is '..ret..' ('..os.date('%c', stamp)..')')
 
-        -- Test localDateToUTCDate() in terms of utcDateToStamp() and localDate()
-        ret = hora.utcDateToStamp(hora.localDateToUTCDate(hora.localDate(stamp)))
+        -- Test localDateToUTCDate() in terms of utcDateToTimestamp() and localDate()
+        ret = hora.utcDateToTimestamp(hora.localDateToUTCDate(hora.localDate(stamp)))
         check(stamp == ret, "hora.localDateToUTCDate fails for: "..stamp..'; is '..ret..' ('..os.date('%c', stamp)..')')
 
-        -- Test utcDateToLocalDate() in terms of localDateToStamp() and utcDate()
-        ret = hora.localDateToStamp(hora.utcDateToLocalDate(hora.utcDate(stamp)))
+        -- Test utcDateToLocalDate() in terms of localDateToTimestamp() and utcDate()
+        ret = hora.localDateToTimestamp(hora.utcDateToLocalDate(hora.utcDate(stamp)))
         check(stamp == ret, "hora.utcDateToLocalDate fails for: "..stamp..'; is '..ret..' ('..os.date('%c', stamp)..')')
 
         -- Test RFC1123Date() for monotonic time increase.

@@ -1,15 +1,15 @@
 
 -- Base functions are local for speed.
 local function offset(stamp)
-    local stamp     = stamp or os.time()
+    local stamp     = tonumber(stamp) or os.time()
     local utcD      = os.date("!*t", stamp)
     utcD.isdst      = os.date('*t', stamp).isdst
     return stamp - os.time(utcD)
 end
 
-local function localDate(stamp)              return os.date('*t', stamp or os.time()) end
+local function localDate(stamp)              return os.date('*t', tonumber(stamp) or os.time()) end
 local function utcDate(stamp)
-    local stamp     = stamp or os.time()
+    local stamp     = tonumber(stamp) or os.time()
     local date      = os.date('*t', stamp)
     local offset    = offset(stamp)
     local utcD      = os.date('*t', stamp - offset)
@@ -61,7 +61,7 @@ local hora = {
 }
 
 function hora.ISO8601Date(stamp)
-    if stamp >= 0 then
+    if type(stamp) == "number" and stamp >= 0 then
         if stamp == 0 then
             return ''
         else
@@ -160,7 +160,7 @@ function hora.ISO8601DateToTimestamp(str)
 end
 
 function hora.ISO8601Duration(seconds)
-    if seconds >= 0 then
+    if type(seconds) == "number" and seconds >= 0 then
         if seconds == 0 then
             return "PT0H"
         end

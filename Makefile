@@ -16,7 +16,7 @@ define compile_lua_script
 	echo $1 
 	$(LUAC) -o $@.$(EXT) $(1)
 	if [ -e "$(LUAENC)" ]; then \
-		$(LUAENC) $@.$(EXT) $@.$(EXT).enc; \
+		$(LUAENC) $@.$(EXT) $@.$(EXT).enc xz; \
 	fi
 	echo "#!$(LUA_DIR)$(LUA)" > $@.$(EXT).sh
 	if [ -e "$(LUAENC)" ]; then \

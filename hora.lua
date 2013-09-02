@@ -35,6 +35,7 @@ local function localDateToUTCDate(localDate) return utcDate(localDateToTimestamp
 
 local function utcDateToTimestamp(utcD)
     local stamp = os.time(utcD)
+    if not stamp then return nil, "Please pass a valid utc date" end
     stamp = stamp + offset(stamp)
     local calcHour, thisHour = utcDate(stamp).hour, tonumber(utcD.hour or 0)
     if calcHour ~= thisHour then

@@ -1,7 +1,7 @@
 
 -- Base functions are local for speed.
 local function offset(stamp)
-    local stamp     = tonumber(stamp) or os.time()
+    local stamp     = math.floor(tonumber(stamp) or os.time())
     local utcD      = os.date("!*t", stamp)
     utcD.isdst      = os.date('*t', stamp).isdst
     return stamp - os.time(utcD)

@@ -172,7 +172,7 @@ function hora.ISO8601Duration(seconds)
         seconds = seconds - days * 24 * 3600
         local hours =   math.floor(seconds / 3600)
         seconds = seconds - hours * 3600
-        local mins =   math.floor(seconds / 3600)
+        local mins =   math.floor(seconds / 60)
         seconds = seconds - mins * 60
         local insertedT = false
         local result = {'P'}

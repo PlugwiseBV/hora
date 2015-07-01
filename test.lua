@@ -1,3 +1,4 @@
+#!/usr/bin/env lua
 
 local hora = require "hora"
 
@@ -9,6 +10,8 @@ local startT, endT = os.time({year = 2011, month = 01, day = 01}), os.time({year
 --local startT, endT = os.time({year = 2012, month = 03, day = 24, hour = 23}), os.time({year = 2012, month = 03, day = 25, hour = 07})
 local jump = 900 -- 15 minutes
 
+local day_sec = 86400 -- 24H
+
 local errors = 0
 
 local function check(cond, msg)
@@ -17,6 +20,27 @@ local function check(cond, msg)
         print(msg)
     end
 end
+
+local function compareDateTables(tableA, tableB)
+    for key,value in pairs(tableA) do
+        if tableA[key] ~= tableB[key] then
+            return false
+        end
+    end
+    return true
+end
+
+-- Exists because the increment/decrement uses it and we do not wat a dependency on coreUti
+local function copyTable(source, target)
+    local target = (target ~= nil and target) or {}
+    for k, v in pairs(source) do
+        target[(type(k) == "table" and copyTable(k)) or k] = (type(v) == "table" and copyTable(v)) or v
+    end
+    return target
+end
+
+coreUtil = {}
+coreUtil.copyTable = copyTable
 
 local origTZ = io.open('/etc/timezone'):read('*all')
 
@@ -91,6 +115,52 @@ for i, tz in ipairs(timezones) do
         ret = hora.ISO8601DateToTimestamp(thisISODate)
         --print(os.date('%c', stamp), thisISODate)
         check(stamp == ret, "hora.ISO8601DateToTimestamp fails for: "..stamp..'; is '..ret..' ('..os.date('%c', stamp)..'), ('..thisISODate..')')
+
+        -- Test the date increment and decrement feature for sub-day steps
+        local curDateTable = hora.localDate(stamp)
+        -- Make a deep copy of the original to ensure that the increment and decrement functions do not change the original table
+        local curDateTableCopy = {}
+        for key,value in pairs(curDateTable) do
+            curDateTableCopy[key] = value
+        end
+        -- Increment tests
+        local incrementedTable = hora.incrementDateTable(curDateTable, "PT1S")
+        check(compareDateTables(curDateTable, curDateTableCopy), "hora.incrementDateTable fails: changes original table")
+        check(hora.localDateToTimestamp(incrementedTable) - stamp == 1, string.format("hora.incrementTable fails: adding one second results in %d. Expected: %d", hora.localDateToTimestamp(incrementedTable), stamp + 1))
+        local incrementedTable = hora.incrementDateTable(curDateTable, "PT4H")
+        check(compareDateTables(curDateTable, curDateTableCopy), "hora.incrementDateTable fails: changes original table")
+        check(hora.localDateToTimestamp(incrementedTable) - stamp == 14400, string.format("hora.incrementTable fails: adding four hours results in %d. Expected: %d", hora.localDateToTimestamp(incrementedTable), stamp + 14400))
+        local incrementedTable = hora.incrementDateTable(curDateTable, "P1D")
+        check(compareDateTables(curDateTable, curDateTableCopy), "hora.incrementDateTable fails: changes original table")
+        if incrementedTable.hour == curDateTable.hour + 1 then
+            incrementedTable.hour = incrementedTable.hour - 1
+            check(hora.localDate((hora.localDateToTimestamp(incrementedTable))).hour == curDateTable.hour - 1 and incrementedTable.min == curDateTable.min and incrementedTable.sec == curDateTable.sec and incrementedTable.day ~= curDateTable.day,
+                  string.format("hora.incrementDateTable fails: a one day increase leads to unexpected results. Expected hour, min, sec: %d, %d, %d, got: %d, %d, %d",
+                  curDateTable.hour - 1, curDateTable.min, curDateTable.sec, hora.localDate((hora.localDateToTimestamp(incrementedTable))).hour, incrementedTable.min, incrementedTable.sec))
+        else
+            check(incrementedTable.hour == curDateTable.hour and incrementedTable.min == curDateTable.min and incrementedTable.sec == curDateTable.sec and incrementedTable.day ~= curDateTable.day,
+                  string.format("hora.incrementDateTable fails: a one day increase leads to unexpected results. Expected hour, min, sec: %d, %d, %d, got: %d, %d, %d",
+                  curDateTable.hour, curDateTable.min, curDateTable.sec, incrementedTable.hour, incrementedTable.min, incrementedTable.sec))
+        end
+        -- Decrement tests
+        local decrementedTable = hora.decrementDateTable(curDateTable, "PT1S")
+        check(compareDateTables(curDateTable, curDateTableCopy), "hora.decrementDateTable fails: changes original table")
+        check(hora.localDateToTimestamp(decrementedTable) - stamp == -1, string.format("hora.decrementTable fails: adding one second results in %d. Expected: %d", hora.localDateToTimestamp(decrementedTable), stamp -1))
+        local decrementedTable = hora.decrementDateTable(curDateTable, "PT4H")
+        check(compareDateTables(curDateTable, curDateTableCopy), "hora.decrementDateTable fails: changes original table")
+        check(hora.localDateToTimestamp(decrementedTable) - stamp == -14400, string.format("hora.decrementTable fails: adding four hours results in %d. Expected: %d", hora.localDateToTimestamp(decrementedTable), stamp - 14400))
+        local decrementedTable = hora.decrementDateTable(curDateTable, "P1D")
+        check(compareDateTables(curDateTable, curDateTableCopy), "hora.decrementDateTable fails: changes original table")
+        if decrementedTable.hour == curDateTable.hour - 1 then
+            decrementedTable.hour = decrementedTable.hour + 1
+            check(hora.localDate((hora.localDateToTimestamp(decrementedTable))).hour == curDateTable.hour + 1 and decrementedTable.min == curDateTable.min and decrementedTable.sec == curDateTable.sec and decrementedTable.day ~= curDateTable.day,
+                  string.format("hora.decrementDateTable fails: a one day decrease leads to unexpected results. Expected hour, min, sec: %d, %d, %d, got: %d, %d, %d",
+                  curDateTable.hour + 1, curDateTable.min, curDateTable.sec, hora.localDate((hora.localDateToTimestamp(decrementedTable))).hour, decrementedTable.min, decrementedTable.sec))
+        else
+            check(decrementedTable.hour == curDateTable.hour and decrementedTable.min == curDateTable.min and decrementedTable.sec == curDateTable.sec and decrementedTable.day ~= curDateTable.day,
+                  string.format("hora.decrementDateTable fails: a one day decrease leads to unexpected results. Expected hour, min, sec: %d, %d, %d, got: %d, %d, %d",
+                  curDateTable.hour, curDateTable.min, curDateTable.sec, decrementedTable.hour, decrementedTable.min, decrementedTable.sec))
+        end
 
         if lastErrors ~= errors then    print(os.date('\27[01;31m%c failed!\27[0m'))end
 

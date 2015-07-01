@@ -1,5 +1,24 @@
+-- Some base tables
+local letMult = {
+    S = 1,
+    M = 60,
+    H = 3600,
+    D = 86400,
+    W = 604800,
+}
+
+-- RFC2616 (and RFC850 and RFC1123 and ANSI C asctime()) months and days.
+local months = {
+    "Jan",      "Feb",      "Mar",      "Apr",      "May",      "Jun",      "Jul",      "Aug",      "Sep",      "Oct",      "Nov",      "Dec",
+    Jan = 1,    Feb = 2,    Mar = 3,    Apr = 4,    May = 5,    Jun = 6,    Jul = 7,    Aug = 8,    Sep = 9,    Oct = 10,   Nov = 11,   Dec = 12,
+}
+local days = {
+    "Sun",      "Mon",      "Tue",      "Wed",      "Thu",      "Fri",      "Sat",
+    Sun = 1,    Mon = 2,    Tue = 3,    Wed = 4,    Thu = 5,    Fri = 6,    Sat = 7,
+}
 
 -- Base functions are local for speed.
+
 local function offset(stamp)
     local stamp     = math.floor(tonumber(stamp) or os.time())
     local utcD      = os.date("!*t", stamp)
@@ -50,16 +69,67 @@ end
 
 local function utcDateToLocalDate(utcD)   return os.date('*t', utcDateToTimestamp(utcD)) end
 
+local function ISO8601DurationToSeconds(str)
+    if type(str) == "string" then
+        local seconds = nil
+        local days, time = str:match("^P([%dDW]*)T?([%dSMH]*)")
+        if not (days and time) then return nil, "Not an ISO8601 Duration." end
+        for num, let in time:gmatch("(%d+)([SMH])") do
+            seconds = (seconds or 0) + tonumber(num) * letMult[let]
+        end
+        for num, let in days:gmatch("(%d+)([DW])") do
+            seconds = (seconds or 0) + tonumber(num) * letMult[let]
+        end
+        return seconds
+    else
+        return nil, "Please pass a string."
+    end
+end
+
+local function changeDateTable(table, str, increment)
+    local timediff = ISO8601DurationToSeconds(str)
+    local newTable
+    if timediff ~= nil then
+        if not increment then
+            timediff = timediff *-1
+        end
+        local wasdst = table.isdst
+        local tableSec = localDateToTimestamp(table)
+        newTable = localDate(tableSec + timediff)
+        if (timediff % 86400 == 0) and (newTable.isdst ~= table.isdst) then
+            table = coreUtil.copyTable(table)
+            table.isdst = newTable.isdst
+            tableSec = localDateToTimestamp(table)
+            local testTable = localDate(tableSec + timediff)
+            -- This is the test where you want to land in an hour that does not exists because the DST removes that hour. In that case, go for the 24 hour day rather then landing one hour early
+            if testTable.isdst == newTable.isdst then
+                newTable = testTable
+            end
+        end
+    end
+    return newTable or table
+end
+
 -- Base functions are local for speed.
 local hora = {
-    offset                  = offset,
-    localDate               = localDate,
-    utcDate                 = utcDate,
-    localDateToTimestamp    = localDateToTimestamp,
-    localDateToUTCDate      = localDateToUTCDate,
-    utcDateToTimestamp      = utcDateToTimestamp,
-    utcDateToLocalDate      = utcDateToLocalDate,
+    offset                      = offset,
+    localDate                   = localDate,
+    utcDate                     = utcDate,
+    localDateToTimestamp        = localDateToTimestamp,
+    localDateToUTCDate          = localDateToUTCDate,
+    utcDateToTimestamp          = utcDateToTimestamp,
+    utcDateToLocalDate          = utcDateToLocalDate,
+    ISO8601DurationToSeconds    = ISO8601DurationToSeconds,
 }
+
+function hora.incrementDateTable(table, str)
+    return changeDateTable(table, str, true)
+end
+
+function hora.decrementDateTable(table, str)
+    return changeDateTable(table, str, false)
+end
+
 
 function hora.ISO8601Date(stamp)
     if type(stamp) == "number" and stamp >= 0 then
@@ -93,6 +163,7 @@ function hora.ISO8601Date(stamp)
         return nil, "Please pass a positive number."
     end
 end
+
 function hora.ISO8601DateToTimestamp(str)
     if str == '' then
         return 0
@@ -214,41 +285,6 @@ function hora.ISO8601Duration(seconds)
         return nil, "Please pass a positive number."
     end
 end
-
-local letMult = {
-    S = 1,
-    M = 60,
-    H = 3600,
-    D = 86400,
-    W = 604800,
-}
-
-function hora.ISO8601DurationToSeconds(str)
-    if type(str) == "string" then
-        local seconds = nil
-        local days, time = str:match("^P([%dDW]*)T?([%dSMH]*)")
-        if not (days and time) then return nil, "Not an ISO8601 Duration." end
-        for num, let in time:gmatch("(%d+)([SMH])") do
-            seconds = (seconds or 0) + tonumber(num) * letMult[let]
-        end
-        for num, let in days:gmatch("(%d+)([DW])") do
-            seconds = (seconds or 0) + tonumber(num) * letMult[let]
-        end
-        return seconds
-    else
-        return nil, "Please pass a string."
-    end
-end
-
--- RFC2616 (and RFC850 and RFC1123 and ANSI C asctime()) months and days.
-local months = {
-    "Jan",      "Feb",      "Mar",      "Apr",      "May",      "Jun",      "Jul",      "Aug",      "Sep",      "Oct",      "Nov",      "Dec",
-    Jan = 1,    Feb = 2,    Mar = 3,    Apr = 4,    May = 5,    Jun = 6,    Jul = 7,    Aug = 8,    Sep = 9,    Oct = 10,   Nov = 11,   Dec = 12,
-}
-local days = {
-    "Sun",      "Mon",      "Tue",      "Wed",      "Thu",      "Fri",      "Sat",
-    Sun = 1,    Mon = 2,    Tue = 3,    Wed = 4,    Thu = 5,    Fri = 6,    Sat = 7,
-}
 
 --- Produce RFC1123 dates, e.g. Sun, 06 Nov 1994 08:49:37 GMT
 -- \publicfunction{util.RFC1123Date}{Produce RFC1123 dates, e.g. Sun, 06 Nov 1994 08:49:37 GMT}{

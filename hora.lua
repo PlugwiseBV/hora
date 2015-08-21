@@ -101,7 +101,8 @@ function hora.ISO8601DateToTimestamp(str)
         -- Try to match the UTC offset in minute resolution, first.
         d.offSign, d.offHour, d.offMin = str:match('([+-])(%d%d):?(%d%d)[ \t]*$')
         if not (d.offSign and d.offHour and d.offMin) then
-            d.offSign, d.offHour = str:match('([+-])(%d%d)[ \t]*$')
+        -- If that fails, try to match only the hour diff
+            d.offSign, d.offHour = str:match('^[ \t]*%d%d%d%d%-?%d%d%-?%d%dT?%d?%d?:?%d?%d?:?%d?%d?%.?%d?%d?%d?([+-])(%d%d)[ \t]*$')
         end
         -- Both no timezone and 'Z' mean UTC.
         if (not (d.offSign and d.offHour)) or str:match('Z[ \t]*$') then

@@ -85,7 +85,7 @@ for i, tz in ipairs(timezones) do
         local thisTime = (((thisH * 60 + thisM) * 60) + thisS) + (thisOffSign == '+' and -60 or 60) * (thisOffH * 60 + thisOffM)
         local dt = thisTime - lastTime
         --print(thisISODate, lastISODate)
-        check(jump == dt or jump == (86400 + dt), "hora.ISO8601Date fails for: "..stamp..' ('..os.date('%c', stamp).."); does not increase monotonically ("..dt.."; should be "..jump..")")
+        check(jump == dt or jump == (86400 + dt), "hora.ISO8601Date fails for: "..stamp..' ('..os.date('%c', stamp).."); does not increase monotonously ("..dt.."; should be "..jump..")")
 
         -- Test ISO8601DateToTimestamp() in terms of ISO8601Date()
         ret = hora.ISO8601DateToTimestamp(thisISODate)

@@ -102,6 +102,17 @@ for i, tz in ipairs(timezones) do
     end
 end
 
+-- Test ISO8601Date() to floor subseconds correctly.
+local subseconds = {
+    [1450000000 -      1e-6] = "46:39%.999",
+    [1450000000 -   3566e-6] = "46:39%.996",
+    [1450000000 - 887766e-6] = "46:39%.112",
+    [1450000000 - 999999e-6] = "46:39[^%.]",
+}
+for stamp, match in pairs(subseconds) do
+    assert(hora.ISO8601Date(stamp):match(match), "hora.ISO8601Date fails to properly floor subseconds for: "..stamp.."; which should match "..match)
+end
+
 for _, duration in ipairs({0, 10, 45, 60, 100, 120, 200, 300, 360, 900, 1000, 2700, 3600, 4000, 7200, 8000, 100000, 10000000}) do
     ret = hora.ISO8601DurationToSeconds(hora.ISO8601Duration(duration))
     check(duration == ret, "hora.ISO8601DurationToSeconds and/or hora.ISO8601Duration fail for: "..duration..'; is '..ret)

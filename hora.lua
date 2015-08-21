@@ -73,7 +73,7 @@ function hora.ISO8601Date(stamp)
                 pre = '-'
                 offset = offset * -1
             end
-            local subsecond = stamp - math.floor(stamp)
+            local subsecond = math.floor(1000 * (stamp - math.floor(stamp))) / 1000
             local now = os.date('*t', stamp)
             stamp = math.floor(stamp)
             if subsecond ~= 0 then

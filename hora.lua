@@ -88,6 +88,7 @@ end
 
 local function changeDateTable(table, str, increment)
     local timediff = ISO8601DurationToSeconds(str)
+    assert(timediff, "The passed duration "..str.." is not a valid ISO 8601 duration.")
     local newTable
     if timediff ~= nil then
         if not increment then

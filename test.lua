@@ -30,18 +30,6 @@ local function compareDateTables(tableA, tableB)
     return true
 end
 
--- Exists because the increment/decrement uses it and we do not wat a dependency on coreUti
-local function copyTable(source, target)
-    local target = (target ~= nil and target) or {}
-    for k, v in pairs(source) do
-        target[(type(k) == "table" and copyTable(k)) or k] = (type(v) == "table" and copyTable(v)) or v
-    end
-    return target
-end
-
-coreUtil = {}
-coreUtil.copyTable = copyTable
-
 local origTZ = io.open('/etc/timezone'):read('*all')
 
 -- Set origTZ last to correct the timezone.

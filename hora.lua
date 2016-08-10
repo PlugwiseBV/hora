@@ -1,3 +1,11 @@
+local function copyTable(source, target)
+    local target = (target ~= nil and target) or {}
+    for k, v in pairs(source) do
+        target[(type(k) == "table" and copyTable(k)) or k] = (type(v) == "table" and copyTable(v)) or v
+    end
+    return target
+end
+
 -- Some base tables
 local letMult = {
     S = 1,
@@ -98,7 +106,7 @@ local function changeDateTable(table, str, increment)
         local tableSec = localDateToTimestamp(table)
         newTable = localDate(tableSec + timediff)
         if (timediff % 86400 == 0) and (newTable.isdst ~= table.isdst) then
-            table = coreUtil.copyTable(table)
+            table = copyTable(table)
             table.isdst = newTable.isdst
             tableSec = localDateToTimestamp(table)
             local testTable = localDate(tableSec + timediff)

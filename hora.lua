@@ -139,6 +139,19 @@ function hora.decrementDateTable(table, str)
     return changeDateTable(table, str, false)
 end
 
+-- Memoize offset serialization here.
+local offsetCache = setmetatable({}, {__index = function(cache, offset)
+    local prefix = '+'
+    if offset < 0 then
+        prefix = '-'
+        offset = offset * -1
+    end
+    local hours   = math.floor(offset / 3600)
+    local minutes = math.floor((offset / 60) % 60)
+
+    cache[offset] = string.format("%s%02d:%02d", prefix, hours, minutes)
+    return cache[offset]
+end})
 
 function hora.ISO8601Date(stamp)
     if type(stamp) == "number" and stamp >= 0 then
@@ -146,26 +159,17 @@ function hora.ISO8601Date(stamp)
             return ''
         else
             local stamp = stamp or scheduler.time()
-            local offset = hora.offset(stamp)
-            local pre = '+'
-            if offset < 0 then
-                pre = '-'
-                offset = offset * -1
-            end
-            local offsetHours   = math.floor(offset / 3600)
-            local offsetMins    = math.floor((offset / 60) % 60)
+            local offsetStr = offsetCache[hora.offset(stamp)]
             local flooredStamp  = math.floor(stamp)
             local now = os.date('*t', flooredStamp)
             if flooredStamp == stamp then
-                return string.format('%04d-%02d-%02dT%02d:%02d:%02d%s%02d:%02d',
-                                        now.year, now.month, now.day, now.hour, now.min, now.sec,
-                                        pre, offsetHours, offsetMins)
+                return string.format('%04d-%02d-%02dT%02d:%02d:%02d%s',
+                                        now.year, now.month, now.day, now.hour, now.min, now.sec, offsetCache[hora.offset(stamp)])
             else
                 -- An fp date is serialized to millisecond precision. C's printf() always rounds, but we need our dates to be floored.
                 -- Therefore, subtract 0.4999999 milliseconds from the second field.
-                return string.format('%04d-%02d-%02dT%02d:%02d:%06.3f%s%02d:%02d',
-                                        now.year, now.month, now.day, now.hour, now.min, (stamp % 60) - 0.0004999999,
-                                        pre, offsetHours, offsetMins)
+                return string.format('%04d-%02d-%02dT%02d:%02d:%06.3f%s',
+                                        now.year, now.month, now.day, now.hour, now.min, (stamp % 60) - 0.0004999999, offsetCache[hora.offset(stamp)])
             end
         end
     else

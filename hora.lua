@@ -154,23 +154,21 @@ local offsetCache = setmetatable({}, {__index = function(cache, offset)
 end})
 
 function hora.ISO8601Date(stamp)
-    if type(stamp) == "number" and stamp >= 0 then
-        if stamp == 0 then
-            return ''
+    if stamp == 0 then
+        return ''
+    elseif type(stamp) == "number" and stamp > 0 then
+        local stamp = stamp or scheduler.time()
+        local offsetStr = offsetCache[hora.offset(stamp)]
+        local flooredStamp  = math.floor(stamp)
+        local now = os.date('*t', flooredStamp)
+        if flooredStamp == stamp then
+            return string.format('%04d-%02d-%02dT%02d:%02d:%02d%s',
+                                    now.year, now.month, now.day, now.hour, now.min, now.sec, offsetCache[hora.offset(stamp)])
         else
-            local stamp = stamp or scheduler.time()
-            local offsetStr = offsetCache[hora.offset(stamp)]
-            local flooredStamp  = math.floor(stamp)
-            local now = os.date('*t', flooredStamp)
-            if flooredStamp == stamp then
-                return string.format('%04d-%02d-%02dT%02d:%02d:%02d%s',
-                                        now.year, now.month, now.day, now.hour, now.min, now.sec, offsetCache[hora.offset(stamp)])
-            else
-                -- An fp date is serialized to millisecond precision. C's printf() always rounds, but we need our dates to be floored.
-                -- Therefore, subtract 0.4999999 milliseconds from the second field.
-                return string.format('%04d-%02d-%02dT%02d:%02d:%06.3f%s',
-                                        now.year, now.month, now.day, now.hour, now.min, (stamp % 60) - 0.0004999999, offsetCache[hora.offset(stamp)])
-            end
+            -- An fp date is serialized to millisecond precision. C's printf() always rounds, but we need our dates to be floored.
+            -- Therefore, subtract 0.4999999 milliseconds from the second field.
+            return string.format('%04d-%02d-%02dT%02d:%02d:%06.3f%s',
+                                    now.year, now.month, now.day, now.hour, now.min, (stamp % 60) - 0.0004999999, offsetCache[hora.offset(stamp)])
         end
     else
         return nil, "Please pass a positive number."

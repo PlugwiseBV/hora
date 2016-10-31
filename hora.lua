@@ -146,12 +146,14 @@ function hora.ISO8601Date(stamp)
             return ''
         else
             local stamp = stamp or scheduler.time()
-            local offset = hora.offset(stamp) / 3600
+            local offset = hora.offset(stamp)
             local pre = '+'
             if offset < 0 then
                 pre = '-'
                 offset = offset * -1
             end
+            local offsetHours   = math.floor(offset / 3600)
+            local offsetMins    = math.floor((offset / 60) % 60)
             local subsecond = math.floor(1000 * (stamp - math.floor(stamp))) / 1000
             local now = os.date('*t', stamp)
             stamp = math.floor(stamp)
@@ -166,7 +168,7 @@ function hora.ISO8601Date(stamp)
             return string.format((subsecond     and '%04d-%02d-%02dT%02d:%02d:%06.3f%s%02d:%02d')
                                                 or  '%04d-%02d-%02dT%02d:%02d:%02d%s%02d:%02d',
                 now.year, now.month, now.day, now.hour, now.min, now.sec,
-                pre, math.floor(offset), math.floor((offset-math.floor(offset))*60))
+                pre, offsetHours, offsetMins)
         end
     else
         return nil, "Please pass a positive number."

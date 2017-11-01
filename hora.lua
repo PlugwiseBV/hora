@@ -166,9 +166,8 @@ function hora.ISO8601Date(stamp)
                                     now.year, now.month, now.day, now.hour, now.min, now.sec, offsetCache[hora.offset(stamp)])
         else
             -- An fp date is serialized to millisecond precision. C's printf() always rounds, but we need our dates to be floored.
-            -- Therefore, subtract 0.4999999 milliseconds from the second field.
-            return string.format('%04d-%02d-%02dT%02d:%02d:%06.3f%s',
-                                    now.year, now.month, now.day, now.hour, now.min, (stamp % 60) - 0.0004999999, offsetCache[hora.offset(stamp)])
+            return string.format('%04d-%02d-%02dT%02d:%02d:%02d.%03d%s',
+                                    now.year, now.month, now.day, now.hour, now.min, now.sec, math.floor((1000 * stamp) % 1000), offsetCache[hora.offset(stamp)])
         end
     else
         return nil, "Please pass a positive number."

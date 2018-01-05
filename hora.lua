@@ -158,7 +158,6 @@ function hora.ISO8601Date(stamp)
         return ''
     elseif type(stamp) == "number" and stamp > 0 then
         local stamp = stamp or scheduler.time()
-        local offsetStr = offsetCache[hora.offset(stamp)]
         local flooredStamp  = math.floor(stamp)
         local now = os.date('*t', flooredStamp)
         if flooredStamp == stamp then

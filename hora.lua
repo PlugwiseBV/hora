@@ -157,23 +157,19 @@ local offsetCache = setmetatable({}, {__index = function(cache, offset)
 end})
 
 function hora.ISO8601Date(stamp)
-    if stamp == 0 then
-        return ''
-    elseif type(stamp) == "number" and stamp > 0 then
-        local stamp = stamp or scheduler.time()
-        local flooredStamp  = math.floor(stamp)
-        local now = os.date('*t', flooredStamp)
+    if type(stamp) == "number" and stamp > 0 then
+        local flooredStamp  = floor(stamp)
+        local now = os.date("%FT%H:%M:%S", flooredStamp)
         if flooredStamp == stamp then
-            return string.format('%04d-%02d-%02dT%02d:%02d:%02d%s',
-                                    now.year, now.month, now.day, now.hour, now.min, now.sec, offsetCache[hora.offset(stamp)])
+            return now..offsetCache[offset(stamp)]
         else
             -- An fp date is serialized to millisecond precision. C's printf() always rounds, but we need our dates to be floored.
-            return string.format('%04d-%02d-%02dT%02d:%02d:%02d.%03d%s',
-                                    now.year, now.month, now.day, now.hour, now.min, now.sec, math.floor((1000 * stamp) % 1000), offsetCache[hora.offset(stamp)])
+            return format('%s.%03d%s', now, floor(1000 * (stamp - flooredStamp)), offsetCache[offset(stamp)])
         end
-    else
-        return nil, "Please pass a positive number."
+    elseif stamp == 0 then
+        return ''
     end
+    return nil, "Please pass a positive number."
 end
 
 function hora.ISO8601DateToTimestamp(str)

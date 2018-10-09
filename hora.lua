@@ -1,3 +1,6 @@
+local floor, fmod, insert, concat   = math.floor, math.fmod, table.insert, table.concat
+local format                        = string.format
+
 local function copyTable(source, target)
     local target = (target ~= nil and target) or {}
     for k, v in pairs(source) do
@@ -28,7 +31,7 @@ local days = {
 -- Base functions are local for speed.
 
 local function offset(stamp)
-    local stamp     = math.floor(tonumber(stamp) or os.time())
+    local stamp     = floor(tonumber(stamp) or os.time())
     local utcD      = os.date("!*t", stamp)
     utcD.isdst      = os.date('*t', stamp).isdst
     return stamp - os.time(utcD)
@@ -146,10 +149,10 @@ local offsetCache = setmetatable({}, {__index = function(cache, offset)
         prefix = '-'
         offset = offset * -1
     end
-    local hours   = math.floor(offset / 3600)
-    local minutes = math.floor((offset / 60) % 60)
+    local hours   = floor(offset / 3600)
+    local minutes = floor((offset / 60) % 60)
 
-    cache[offset] = string.format("%s%02d:%02d", prefix, hours, minutes)
+    cache[offset] = format("%s%02d:%02d", prefix, hours, minutes)
     return cache[offset]
 end})
 
@@ -201,8 +204,8 @@ function hora.ISO8601DateToTimestamp(str)
         if not (d.year and d.month and d.day and d.hour and d.min and d.sec) then
             d.year, d.month, d.day, d.hour, d.min, d.sec    = str:match('^[ \t]*(%d%d%d%d)%-?(%d%d)%-?(%d%d)T(%d%d):?(%d%d):?(%d%d)')
         else
-            subsecond = d.sec - math.floor(d.sec)
-            d.sec = math.floor(d.sec)
+            subsecond = d.sec - floor(d.sec)
+            d.sec = floor(d.sec)
         end
         -- Match minute precision.
         if not (d.year and d.month and d.day and d.hour and d.min and d.sec) then
@@ -240,8 +243,6 @@ function hora.ISO8601DateToTimestamp(str)
         return nil, "Please pass a string."
     end
 end
-
-local floor, insert, concat = math.floor, table.insert, table.concat
 
 -- Memoize duration serialization here.
 local durationCache = setmetatable({[0] = "PT0H"}, {__index = function(cache, seconds)
@@ -304,7 +305,7 @@ end
 -- }
 function hora.RFC1123Date(stamp)
     local utcD = utcDate(stamp)
-    return string.format('%s, %02d %s %04d %02d:%02d:%02d GMT', days[utcD.wday], utcD.day, months[utcD.month], utcD.year, utcD.hour, utcD.min, math.floor(utcD.sec))
+    return format('%s, %02d %s %04d %02d:%02d:%02d GMT', days[utcD.wday], utcD.day, months[utcD.month], utcD.year, utcD.hour, utcD.min, floor(utcD.sec))
 end
 
 --- We're trying to convert HTTP date fields to UNIX timestamps here. According to RFC2616, the supported formats are:

@@ -241,55 +241,57 @@ function hora.ISO8601DateToTimestamp(str)
     end
 end
 
+local floor, insert, concat = math.floor, table.insert, table.concat
+
+-- Memoize duration serialization here.
+local durationCache = setmetatable({[0] = "PT0H"}, {__index = function(cache, seconds)
+    local insertedT = false
+    local result = {'P'}
+    local mins, hours, days, weeks
+    if seconds > 604800 then
+        local weeks = floor(seconds / 604800)
+        insert(result, weeks)
+        insert(result, 'W')
+        seconds     = seconds - weeks * 604800
+    end
+    if seconds > 86400 then
+        local days  = floor(seconds / 86400)
+        insert(result, days)
+        insert(result, 'D')
+        seconds     = seconds - days * 86400
+    end
+    if seconds > 3600 then
+        local hours = floor(seconds / 3600)
+        insert(result, 'T')
+        insertedT = true
+        insert(result, hours)
+        insert(result, 'H')
+        seconds     = seconds - hours * 3600
+    end
+    if seconds > 60 then
+        local mins  = floor(seconds / 60)
+        if not insertedT then
+            insert(result, 'T')
+            insertedT = true
+        end
+        insert(result, mins)
+        insert(result, 'M')
+        seconds     = seconds - mins * 60
+    end
+    if seconds > 0 then
+        if not insertedT then
+            insert(result, 'T')
+        end
+        insert(result, seconds)
+        insert(result, 'S')
+    end
+    cache[seconds] = concat(result)
+    return cache[seconds]
+end})
+
 function hora.ISO8601Duration(seconds)
     if type(seconds) == "number" and seconds >= 0 then
-        if seconds == 0 then
-            return "PT0H"
-        end
-        local seconds = seconds
-        local weeks =   math.floor(seconds / (7 * 24 * 3600))
-        seconds = seconds - weeks * 7 * 24 * 3600
-        local days =    math.floor(seconds / (24 * 3600))
-        seconds = seconds - days * 24 * 3600
-        local hours =   math.floor(seconds / 3600)
-        seconds = seconds - hours * 3600
-        local mins =   math.floor(seconds / 60)
-        seconds = seconds - mins * 60
-        local insertedT = false
-        local result = {'P'}
-        if weeks > 0 then
-            table.insert(result, weeks)
-            table.insert(result, 'W')
-        end
-        if days > 0 then
-            table.insert(result, days)
-            table.insert(result, 'D')
-        end
-        if hours > 0 then
-            if not insertedT then
-                insertedT = true
-                table.insert(result, 'T')
-            end
-            table.insert(result, hours)
-            table.insert(result, 'H')
-        end
-        if mins > 0 then
-            if not insertedT then
-                insertedT = true
-                table.insert(result, 'T')
-            end
-            table.insert(result, mins)
-            table.insert(result, 'M')
-        end
-        if seconds > 0 then
-            if not insertedT then
-                insertedT = true
-                table.insert(result, 'T')
-            end
-            table.insert(result, seconds)
-            table.insert(result, 'S')
-        end
-        return table.concat(result)
+        return durationCache[seconds]
     else
         return nil, "Please pass a positive number."
     end

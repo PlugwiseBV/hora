@@ -31,11 +31,19 @@ local days = {
 
 -- Base functions are local for speed.
 
+-- Memoizes the result of converting an offset as returned by strftime() to seconds.
+local offsetSeconds = setmetatable({}, {__index = function(cache, offset)
+    local sign, hours, mins = offset:match("^(.)(%d%d)(%d%d)$")
+    local secs = hours * 3600 + mins * 60
+    if sign == '-' then
+        secs = secs * -1
+    end
+    cache[offset] = secs
+    return secs
+end})
+
 local function offset(stamp)
-    local stamp     = floor(tonumber(stamp) or osTime())
-    local utcD      = osDate("!*t", stamp)
-    utcD.isdst      = osDate('*t', stamp).isdst
-    return stamp - osTime(utcD)
+    return offsetSeconds[osDate("%z", floor(tonumber(stamp) or osTime()))]
 end
 
 local function localDate(stamp)              return osDate('*t', tonumber(stamp) or osTime()) end

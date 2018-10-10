@@ -143,17 +143,9 @@ function hora.decrementDateTable(table, str)
     return changeDateTable(table, str, false)
 end
 
--- Memoize offset serialization here.
+-- Offsets as returned by strftime() need a small modification. Memoize the result here.
 local offsetCache = setmetatable({}, {__index = function(cache, offset)
-    local prefix = '+'
-    if offset < 0 then
-        prefix = '-'
-        offset = offset * -1
-    end
-    local hours   = floor(offset / 3600)
-    local minutes = floor((offset / 60) % 60)
-
-    cache[offset] = format("%s%02d:%02d", prefix, hours, minutes)
+    cache[offset] = offset:gsub("^(.-)(%d%d)$", "%1:%2")
     return cache[offset]
 end})
 
@@ -162,10 +154,10 @@ function hora.ISO8601Date(stamp)
         local flooredStamp  = floor(stamp)
         local now = osDate("%FT%H:%M:%S", flooredStamp)
         if flooredStamp == stamp then
-            return now..offsetCache[offset(stamp)]
+            return now..offsetCache[osDate('%z', flooredStamp)]
         else
             -- An fp date is serialized to millisecond precision. C's printf() always rounds, but we need our dates to be floored.
-            return format('%s.%03d%s', now, floor(1000 * (stamp - flooredStamp)), offsetCache[offset(stamp)])
+            return format('%s.%03d%s', now, floor(1000 * (stamp - flooredStamp)), offsetCache[osDate('%z', flooredStamp)])
         end
     elseif stamp == 0 then
         return ''

@@ -1,7 +1,7 @@
 Hora - A Lua Time Library.
 
 Author: JP Florijn <c.florijn@plugwise.com>
-(C) 2013-2014, Plugwise BV, The Netherlands
+(C) 2013-2018, Plugwise BV, The Netherlands
 
 Focus is on proper UTC date to local date conversions and vice versa, as this is an area where Lua's os.date is definitely lacking.
 Also converts ISO 8601 and RFC 1123 dates both ways; although for ISO week-dates are not supported, and RFC 1123 is
@@ -9,4 +9,4 @@ constrained to GMT as per RFC 2616; and converts all dates allowed in RFC 2616 D
 Also implements ISO 8601 durations up to week resolution.
 
 
-Hora is pure Lua and compatible with (at least) Lua 5.1 and 5.2.
+Hora is pure Lua and compatible with (at least) Lua 5.1 and 5.2 and LuaJIT 2.x.

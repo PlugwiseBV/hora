@@ -1,5 +1,6 @@
 local floor, fmod, insert, concat   = math.floor, math.fmod, table.insert, table.concat
 local format                        = string.format
+local osDate, osTime                = os.date, os.time
 
 local function copyTable(source, target)
     local target = (target ~= nil and target) or {}
@@ -31,28 +32,28 @@ local days = {
 -- Base functions are local for speed.
 
 local function offset(stamp)
-    local stamp     = floor(tonumber(stamp) or os.time())
-    local utcD      = os.date("!*t", stamp)
-    utcD.isdst      = os.date('*t', stamp).isdst
-    return stamp - os.time(utcD)
+    local stamp     = floor(tonumber(stamp) or osTime())
+    local utcD      = osDate("!*t", stamp)
+    utcD.isdst      = osDate('*t', stamp).isdst
+    return stamp - osTime(utcD)
 end
 
-local function localDate(stamp)              return os.date('*t', tonumber(stamp) or os.time()) end
+local function localDate(stamp)              return osDate('*t', tonumber(stamp) or osTime()) end
 local function utcDate(stamp)
-    local stamp     = tonumber(stamp) or os.time()
-    local date      = os.date('*t', stamp)
+    local stamp     = tonumber(stamp) or osTime()
+    local date      = osDate('*t', stamp)
     local offset    = offset(stamp)
-    local utcD      = os.date('*t', stamp - offset)
+    local utcD      = osDate('*t', stamp - offset)
     if      (not date.isdst)    and utcD.isdst       then    -- Still Summer!
-        utcD        = os.date('*t', stamp - offset - 3600)
+        utcD        = osDate('*t', stamp - offset - 3600)
     elseif  date.isdst          and (not utcD.isdst) then    -- Not yet Winter!
-        local nextUTCD = os.date('*t', stamp - offset + 3600)
-        utcD        = os.date('*t', stamp - offset + 3600)
+        local nextUTCD = osDate('*t', stamp - offset + 3600)
+        utcD        = osDate('*t', stamp - offset + 3600)
         if nextUTCD.isdst  == false then
             -- If this is the first of the two hours affected by DST, add something to the date.
         else
-            -- os.date does not want to show the skipped hour; so subtract manually.
-            local bangOffset = stamp - os.time(os.date('!*t', stamp))
+            -- osDate does not want to show the skipped hour; so subtract manually.
+            local bangOffset = stamp - osTime(osDate('!*t', stamp))
             utcD.hour = utcD.hour - 1
         end
     end
@@ -60,11 +61,11 @@ local function utcDate(stamp)
     return utcD
 end
 
-local localDateToTimestamp = os.time
+local localDateToTimestamp = osTime
 local function localDateToUTCDate(localDate) return utcDate(localDateToTimestamp(localDate)) end
 
 local function utcDateToTimestamp(utcD)
-    local stamp = os.time(utcD)
+    local stamp = osTime(utcD)
     if not stamp then return nil, "Please pass a valid utc date" end
     stamp = stamp + offset(stamp)
     local calcHour, thisHour = utcDate(stamp).hour, tonumber(utcD.hour or 0)
@@ -78,7 +79,7 @@ local function utcDateToTimestamp(utcD)
     return stamp
 end
 
-local function utcDateToLocalDate(utcD)   return os.date('*t', utcDateToTimestamp(utcD)) end
+local function utcDateToLocalDate(utcD)   return osDate('*t', utcDateToTimestamp(utcD)) end
 
 local function ISO8601DurationToSeconds(str)
     if type(str) == "string" then
@@ -159,7 +160,7 @@ end})
 function hora.ISO8601Date(stamp)
     if type(stamp) == "number" and stamp > 0 then
         local flooredStamp  = floor(stamp)
-        local now = os.date("%FT%H:%M:%S", flooredStamp)
+        local now = osDate("%FT%H:%M:%S", flooredStamp)
         if flooredStamp == stamp then
             return now..offsetCache[offset(stamp)]
         else
@@ -337,7 +338,7 @@ function hora.HTTPDateToTimestamp(date)
             d.year, d.day, d.hour, d.min, d.sec = tonumber(d.year), tonumber(d.day), tonumber(d.hour), tonumber(d.min), tonumber(d.sec)
             -- Interpret RFC850 dates according to RFC2616. This algorithm won't work anymore in 2100. Hopefully, this code will be replaced by then.
             if d.year < 100     then
-                local now = os.date()
+                local now = osDate()
                 local futureYear    = d.year + 2000
                 local pastYear      = d.year + 1900
                 if now.year - pastYear < futureYear - now.year then

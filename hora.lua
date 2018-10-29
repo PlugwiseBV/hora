@@ -246,19 +246,19 @@ local durationCache = setmetatable({[0] = "PT0H"}, {__index = function(cache, se
     local insertedT = false
     local result = {'P'}
     local mins, hours, days, weeks
-    if seconds > 604800 then
+    if seconds >= 604800 then
         local weeks = floor(seconds / 604800)
         insert(result, weeks)
         insert(result, 'W')
         seconds     = seconds - weeks * 604800
     end
-    if seconds > 86400 then
+    if seconds >= 86400 then
         local days  = floor(seconds / 86400)
         insert(result, days)
         insert(result, 'D')
         seconds     = seconds - days * 86400
     end
-    if seconds > 3600 then
+    if seconds >= 3600 then
         local hours = floor(seconds / 3600)
         insert(result, 'T')
         insertedT = true
@@ -266,7 +266,7 @@ local durationCache = setmetatable({[0] = "PT0H"}, {__index = function(cache, se
         insert(result, 'H')
         seconds     = seconds - hours * 3600
     end
-    if seconds > 60 then
+    if seconds >= 60 then
         local mins  = floor(seconds / 60)
         if not insertedT then
             insert(result, 'T')

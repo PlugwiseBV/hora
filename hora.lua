@@ -165,7 +165,7 @@ function hora.ISO8601Date(stamp)
             return now..offsetCache[osDate('%z', flooredStamp)]
         else
             -- An fp date is serialized to millisecond precision. C's printf() always rounds, but we need our dates to be floored.
-            return format('%s.%03d%s', now, floor(1000 * (stamp - flooredStamp)), offsetCache[osDate('%z', flooredStamp)])
+            return format('%s.%03d%s', now, (1000 * stamp) % 1000, offsetCache[osDate('%z', flooredStamp)])
         end
     elseif stamp == 0 then
         return ''

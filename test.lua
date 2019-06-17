@@ -51,7 +51,7 @@ for i, tz in ipairs(timezones) do
         -- Test utcDate() for monotonic time increase.
         local thisUTCDate = hora.utcDate(stamp)
         local dt = ((thisUTCDate.hour - lastUTCDate.hour) * 60 + (thisUTCDate.min - lastUTCDate.min)) * 60 + (thisUTCDate.sec - lastUTCDate.sec)
-        check(jump == dt or jump == (86400 + dt), "hora.utcDate fails for: "..stamp..' ('..os.date('%c', stamp).."); does not increase monotonically ("..dt.."; should be "..jump..")")
+        check(jump == dt or jump == (day_sec + dt), "hora.utcDate fails for: "..stamp..' ('..os.date('%c', stamp).."); does not increase monotonically ("..dt.."; should be "..jump..")")
 
         --  Test utcDateToTimestamp() in terms of utcDate()
         ret = hora.utcDateToTimestamp(thisUTCDate)
@@ -82,7 +82,7 @@ for i, tz in ipairs(timezones) do
         local thisTime = (((thisH * 60 + thisM) * 60) + thisS)
         local dt = thisTime - lastTime
         --print(thisRFCDate, lastRFCDate)
-        check(jump == dt or jump == (86400 + dt), "hora.RFC1123Date fails for: "..stamp..' ('..os.date('%c', stamp).."); does not increase monotonically ("..dt.."; should be "..jump..")")
+        check(jump == dt or jump == (day_sec + dt), "hora.RFC1123Date fails for: "..stamp..' ('..os.date('%c', stamp).."); does not increase monotonically ("..dt.."; should be "..jump..")")
 
         -- Test HTTPDateToTimestamp() in terms of RFC1123Date()
         ret = hora.HTTPDateToTimestamp(thisRFCDate)
@@ -97,7 +97,7 @@ for i, tz in ipairs(timezones) do
         local thisTime = (((thisH * 60 + thisM) * 60) + thisS) + (thisOffSign == '+' and -60 or 60) * (thisOffH * 60 + thisOffM)
         local dt = thisTime - lastTime
         --print(thisISODate, lastISODate)
-        check(jump == dt or jump == (86400 + dt), "hora.ISO8601Date fails for: "..stamp..' ('..os.date('%c', stamp).."); does not increase monotonously ("..dt.."; should be "..jump..")")
+        check(jump == dt or jump == (day_sec + dt), "hora.ISO8601Date fails for: "..stamp..' ('..os.date('%c', stamp).."); does not increase monotonously ("..dt.."; should be "..jump..")")
 
         -- Test ISO8601DateToTimestamp() in terms of ISO8601Date()
         ret = hora.ISO8601DateToTimestamp(thisISODate)

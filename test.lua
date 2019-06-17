@@ -150,8 +150,6 @@ for i, tz in ipairs(timezones) do
                   curDateTable.hour, curDateTable.min, curDateTable.sec, decrementedTable.hour, decrementedTable.min, decrementedTable.sec))
         end
 
-        if lastErrors ~= errors then    print(os.date('\27[01;31m%c failed!\27[0m'))end
-
         -- Set last values.
         lastUTCDate = thisUTCDate
         lastISODate = thisISODate

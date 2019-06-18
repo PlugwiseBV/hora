@@ -155,10 +155,12 @@ end
 
 -- Test ISO8601Date() to floor subseconds correctly.
 local subseconds = {
+    [1450000000            ] = "46:40[^%.]",
     [1450000000 -      1e-6] = "46:39%.999",
     [1450000000 -   3566e-6] = "46:39%.996",
     [1450000000 - 887766e-6] = "46:39%.112",
-    [1450000000 - 999999e-6] = "46:39[^%.]",
+    [1450000000 - 999999e-6] = "46:39%.000",
+    [1449999999            ] = "46:39[^%.]",
 }
 for stamp, match in pairs(subseconds) do
     assert(hora.ISO8601Date(stamp):match(match), "hora.ISO8601Date fails to properly floor subseconds for: "..stamp.."; which should match "..match)

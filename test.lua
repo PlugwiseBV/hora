@@ -9,9 +9,7 @@ local startT, endT = os.time({year = 2011, month = 01, day = 01}), os.time({year
 -- This range is for no-DST -> DST testing.
 --local startT, endT = os.time({year = 2012, month = 03, day = 24, hour = 23}), os.time({year = 2012, month = 03, day = 25, hour = 07})
 local jump = 900 -- 15 minutes
-
 local day_sec = 86400 -- 24H
-
 local errors = 0
 
 local function check(cond, msg)
@@ -39,10 +37,7 @@ local lastErrors    = errors
 local ret
 print('\n\n\tTesting range: '..os.date('%c', startT)..', '..os.date('%c', endT)..' in increments of '..jump..' seconds.\n')
 for i, tz in ipairs(timezones) do
-    local etcTZ = assert(io.open('/etc/timezone', 'w'))
-    assert(etcTZ:write(tz))
-    assert(etcTZ:close())
-    assert(os.execute('sudo dpkg-reconfigure --frontend noninteractive tzdata'))
+    assert(os.execute('sudo timedatectl set-timezone '..tz))
     print('\n\t\tTesting timezone: '..tz)
     local lastUTCDate   = hora.utcDate(startT - jump)
     local lastISODate   = hora.ISO8601Date(startT - jump)

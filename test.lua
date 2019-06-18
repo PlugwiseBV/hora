@@ -3,7 +3,7 @@
 local hora = require "hora"
 
 -- This range includes a couple of DST changes and a leap year.
-local startT, endT = os.time({year = 2011, month = 01, day = 01}), os.time({year = 2013, month = 01, day = 01})
+local startT, endT = os.time({year = 2018, month = 01, day = 01}), os.time({year = 2020, month = 01, day = 01})
 -- This range is for DST -> no-DST testing.
 --local startT, endT = os.time({year = 2012, month = 10, day = 26, hour = 23}), os.time({year = 2012, month = 10, day = 28, hour = 04})
 -- This range is for no-DST -> DST testing.

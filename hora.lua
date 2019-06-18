@@ -46,28 +46,10 @@ local function offset(stamp)
     return offsetSeconds[osDate("%z", floor(tonumber(stamp) or osTime()))]
 end
 
+-- You give it an epoch, it gives you the datetable for local time.
 local function localDate(stamp)              return osDate('*t', tonumber(stamp) or osTime()) end
-local function utcDate(stamp)
-    local stamp     = tonumber(stamp) or osTime()
-    local date      = osDate('*t', stamp)
-    local offset    = offset(stamp)
-    local utcD      = osDate('*t', stamp - offset)
-    if      (not date.isdst)    and utcD.isdst       then    -- Still Summer!
-        utcD        = osDate('*t', stamp - offset - 3600)
-    elseif  date.isdst          and (not utcD.isdst) then    -- Not yet Winter!
-        local nextUTCD = osDate('*t', stamp - offset + 3600)
-        utcD        = osDate('*t', stamp - offset + 3600)
-        if nextUTCD.isdst  == false then
-            -- If this is the first of the two hours affected by DST, add something to the date.
-        else
-            -- osDate does not want to show the skipped hour; so subtract manually.
-            local bangOffset = stamp - osTime(osDate('!*t', stamp))
-            utcD.hour = utcD.hour - 1
-        end
-    end
-    utcD.isdst      = nil
-    return utcD
-end
+-- You give it a timestamp in local time, convert it to a table in UTC.
+local function utcDate(stamp)                return osDate('!*t', tonumber(stamp) or osTime()) end
 
 local localDateToTimestamp = osTime
 local function localDateToUTCDate(localDate) return utcDate(localDateToTimestamp(localDate)) end

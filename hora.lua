@@ -42,18 +42,21 @@ local offsetSeconds = setmetatable({}, {__index = function(cache, offset)
     return secs
 end})
 
+-- You give it a stamp in local time, it tells you what the ofset to UTC in seconds is.
 local function offset(stamp)
     return offsetSeconds[osDate("%z", floor(tonumber(stamp) or osTime()))]
 end
 
--- You give it an epoch, it gives you the datetable for local time.
+-- You give it a timestamp in local time, convert it to a table in local time.
 local function localDate(stamp)              return osDate('*t', tonumber(stamp) or osTime()) end
 -- You give it a timestamp in local time, convert it to a table in UTC.
 local function utcDate(stamp)                return osDate('!*t', tonumber(stamp) or osTime()) end
 
+-- You have a table in local time, convert it to a timestamp in localtime
 local localDateToTimestamp = osTime
+-- You have a table in local time, convert it to a table in UTC.
 local function localDateToUTCDate(localDate) return utcDate(localDateToTimestamp(localDate)) end
-
+-- You have a table in UTC. Convert it to its UTC timestamp
 local function utcDateToTimestamp(utcD)
     local stamp = osTime(utcD)
     if not stamp then return nil, "Please pass a valid utc date" end
@@ -68,7 +71,7 @@ local function utcDateToTimestamp(utcD)
     end
     return stamp
 end
-
+-- You have a table in UTC. Convert it to a table in local time.
 local function utcDateToLocalDate(utcD)   return osDate('*t', utcDateToTimestamp(utcD)) end
 
 local function ISO8601DurationToSeconds(str)

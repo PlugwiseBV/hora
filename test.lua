@@ -38,7 +38,7 @@ local ret
 print('\n\n\tTesting range: '..os.date('%c', startT)..', '..os.date('%c', endT)..' in increments of '..jump..' seconds.\n')
 for i, tz in ipairs(timezones) do
     assert(os.execute('sudo timedatectl set-timezone '..tz))
-    print('\n\t\tTesting timezone: '..tz)
+    print('\t\tTesting timezone: '..tz)
     local lastUTCDate   = hora.utcDate(startT - jump)
     local lastISODate   = hora.ISO8601Date(startT - jump)
     local lastRFCDate   = hora.RFC1123Date(startT - jump)
@@ -172,7 +172,7 @@ for _, duration in ipairs({0, 10, 45, 60, 100, 120, 200, 300, 360, 900, 1000, 27
 end
 
 if 0 == errors then
-    print('\n\t\tSuccess!\n\n')
+    print('\t\tSuccess!')
 else
     print(string.format('\n\t\tErrors: %i\n', errors))
 end

@@ -1,4 +1,4 @@
-#!/usr/bin/env lua
+#!/usr/bin/luajit
 
 local hora = require "hora"
 

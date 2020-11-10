@@ -1,9 +1,9 @@
-local floor, fmod, insert, concat   = math.floor, math.fmod, table.insert, table.concat
-local format                        = string.format
-local osDate, osTime                = os.date, os.time
+local floor, insert, concat = math.floor, table.insert, table.concat
+local format                = string.format
+local osDate, osTime        = os.date, os.time
 
 local function copyTable(source, target)
-    local target = (target ~= nil and target) or {}
+    target = (target ~= nil and target) or {}
     for k, v in pairs(source) do
         target[(type(k) == "table" and copyTable(k)) or k] = (type(v) == "table" and copyTable(v)) or v
     end
@@ -48,14 +48,14 @@ local function offset(stamp)
 end
 
 -- You give it a timestamp in local time, convert it to a table in local time.
-local function localDate(stamp)              return osDate('*t', tonumber(stamp) or osTime()) end
+local function localDate(stamp)             return osDate('*t', tonumber(stamp) or osTime()) end
 -- You give it a timestamp in local time, convert it to a table in UTC.
-local function utcDate(stamp)                return osDate('!*t', tonumber(stamp) or osTime()) end
+local function utcDate(stamp)               return osDate('!*t', tonumber(stamp) or osTime()) end
 
 -- You have a table in local time, convert it to a timestamp in localtime
 local localDateToTimestamp = osTime
 -- You have a table in local time, convert it to a table in UTC.
-local function localDateToUTCDate(localDate) return utcDate(localDateToTimestamp(localDate)) end
+local function localDateToUTCDate(stamp)    return utcDate(localDateToTimestamp(stamp)) end
 -- You have a table in UTC. Convert it to its UTC timestamp
 local function utcDateToTimestamp(utcD)
     local stamp = osTime(utcD)
@@ -77,12 +77,12 @@ local function utcDateToLocalDate(utcD)   return osDate('*t', utcDateToTimestamp
 local function ISO8601DurationToSeconds(str)
     if type(str) == "string" then
         local seconds = nil
-        local days, time = str:match("^P([%dDW]*)T?([%dSMH]*)")
-        if not (days and time) then return nil, "Not an ISO8601 Duration." end
+        local nDays, time = str:match("^P([%dDW]*)T?([%dSMH]*)$")
+        if not (nDays and time) then return nil, "Not an ISO8601 Duration that can be converted to seconds." end
         for num, let in time:gmatch("(%d+)([SMH])") do
             seconds = (seconds or 0) + tonumber(num) * letMult[let]
         end
-        for num, let in days:gmatch("(%d+)([DW])") do
+        for num, let in nDays:gmatch("(%d+)([DW])") do
             seconds = (seconds or 0) + tonumber(num) * letMult[let]
         end
         return seconds
@@ -99,7 +99,6 @@ local function changeDateTable(table, str, increment)
         if not increment then
             timediff = timediff *-1
         end
-        local wasdst = table.isdst
         local tableSec = localDateToTimestamp(table)
         newTable = localDate(tableSec + timediff)
         if (timediff % 86400 == 0) and (newTable.isdst ~= table.isdst) then
@@ -137,9 +136,9 @@ function hora.decrementDateTable(table, str)
 end
 
 -- Offsets as returned by strftime() need a small modification. Memoize the result here.
-local offsetCache = setmetatable({}, {__index = function(cache, offset)
-    cache[offset] = offset:gsub("^(.-)(%d%d)$", "%1:%2")
-    return cache[offset]
+local offsetCache = setmetatable({}, {__index = function(cache, offsetStr)
+    cache[offsetStr] = offsetStr:gsub("^(.-)(%d%d)$", "%1:%2")
+    return cache[offsetStr]
 end})
 
 function hora.ISO8601Date(stamp)
@@ -174,9 +173,9 @@ function hora.ISO8601DateToTimestamp(str)
             d.offSign, d.offHour = '+', 0
         end
         if not d.offMin then d.offMin = 0 end
-        local offset = tonumber(d.offHour) * 3600 + tonumber(d.offMin) * 60
+        local offsetSecs = tonumber(d.offHour) * 3600 + tonumber(d.offMin) * 60
         if d.offSign == '-' then
-            offset = -1 * offset
+            offsetSecs = -1 * offsetSecs
         end
         d = {}
         -- Match subsecond precision.
@@ -219,7 +218,7 @@ function hora.ISO8601DateToTimestamp(str)
         else
             -- To get UTC, we assume the date already is UTC and then subtract the specified offset.
             -- Finally, we add subsecond precision.
-            return hora.utcDateToTimestamp(d) - offset + subsecond
+            return hora.utcDateToTimestamp(d) - offsetSecs + subsecond
         end
     else
         return nil, "Please pass a string."
@@ -230,7 +229,6 @@ end
 local durationCache = setmetatable({[0] = "PT0H"}, {__index = function(cache, seconds)
     local insertedT = false
     local result = {'P'}
-    local mins, hours, days, weeks
     if seconds >= 604800 then
         local weeks = floor(seconds / 604800)
         insert(result, weeks)
@@ -238,10 +236,10 @@ local durationCache = setmetatable({[0] = "PT0H"}, {__index = function(cache, se
         seconds     = seconds - weeks * 604800
     end
     if seconds >= 86400 then
-        local days  = floor(seconds / 86400)
-        insert(result, days)
+        local nDays = floor(seconds / 86400)
+        insert(result, nDays)
         insert(result, 'D')
-        seconds     = seconds - days * 86400
+        seconds     = seconds - nDays * 86400
     end
     if seconds >= 3600 then
         local hours = floor(seconds / 3600)

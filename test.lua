@@ -33,7 +33,6 @@ local origTZ = io.open('/etc/timezone'):read('*all')
 -- Set origTZ last to correct the timezone.
 local timezones = {'Africa/Johannesburg', 'Africa/Windhoek', 'Africa/Khartoum', 'Australia/Tasmania', 'America/Kralendijk', 'Asia/Colombo', origTZ}
 
-local lastErrors    = errors
 local ret
 print('\n\n\tTesting range: '..os.date('%c', startT)..', '..os.date('%c', endT)..' in increments of '..jump..' seconds.\n')
 for i, tz in ipairs(timezones) do
@@ -75,7 +74,7 @@ for i, tz in ipairs(timezones) do
         local thisH, thisM, thisS  = thisRFCDate:match('(%d%d):(%d%d):(%d%d) GMT$')
         local lastTime = (((lastH * 60 + lastM) * 60) + lastS)
         local thisTime = (((thisH * 60 + thisM) * 60) + thisS)
-        local dt = thisTime - lastTime
+        dt = thisTime - lastTime
         --print(thisRFCDate, lastRFCDate)
         check(jump == dt or jump == (day_sec + dt), "hora.RFC1123Date fails for: "..stamp..' ('..os.date('%c', stamp).."); does not increase monotonically ("..dt.."; should be "..jump..")")
 
@@ -86,11 +85,12 @@ for i, tz in ipairs(timezones) do
 
         -- Test ISO8601Date() for monotonic time increase.
         local thisISODate = hora.ISO8601Date(stamp)
-        local lastH, lastM, lastS, lastOffSign, lastOffH, lastOffM  = lastISODate:match('T(%d%d).?(%d%d).?(%d%d%.?%d*)([+-])(%d%d).?(%d%d)$')
-        local thisH, thisM, thisS, thisOffSign, thisOffH, thisOffM  = thisISODate:match('T(%d%d).?(%d%d).?(%d%d%.?%d*)([+-])(%d%d).?(%d%d)$')
-        local lastTime = (((lastH * 60 + lastM) * 60) + lastS) + (lastOffSign == '+' and -60 or 60) * (lastOffH * 60 + lastOffM)
-        local thisTime = (((thisH * 60 + thisM) * 60) + thisS) + (thisOffSign == '+' and -60 or 60) * (thisOffH * 60 + thisOffM)
-        local dt = thisTime - lastTime
+        local lastOffSign, lastOffH, lastOffM, thisOffSign, thisOffH, thisOffM
+        lastH, lastM, lastS, lastOffSign, lastOffH, lastOffM  = lastISODate:match('T(%d%d).?(%d%d).?(%d%d%.?%d*)([+-])(%d%d).?(%d%d)$')
+        thisH, thisM, thisS, thisOffSign, thisOffH, thisOffM  = thisISODate:match('T(%d%d).?(%d%d).?(%d%d%.?%d*)([+-])(%d%d).?(%d%d)$')
+        lastTime = (((lastH * 60 + lastM) * 60) + lastS) + (lastOffSign == '+' and -60 or 60) * (lastOffH * 60 + lastOffM)
+        thisTime = (((thisH * 60 + thisM) * 60) + thisS) + (thisOffSign == '+' and -60 or 60) * (thisOffH * 60 + thisOffM)
+        dt = thisTime - lastTime
         --print(thisISODate, lastISODate)
         check(jump == dt or jump == (day_sec + dt), "hora.ISO8601Date fails for: "..stamp..' ('..os.date('%c', stamp).."); does not increase monotonously ("..dt.."; should be "..jump..")")
 
@@ -110,10 +110,10 @@ for i, tz in ipairs(timezones) do
         local incrementedTable = hora.incrementDateTable(curDateTable, "PT1S")
         check(compareDateTables(curDateTable, curDateTableCopy), "hora.incrementDateTable fails: changes original table")
         check(hora.localDateToTimestamp(incrementedTable) - stamp == 1, string.format("hora.incrementTable fails: adding one second results in %d. Expected: %d", hora.localDateToTimestamp(incrementedTable), stamp + 1))
-        local incrementedTable = hora.incrementDateTable(curDateTable, "PT4H")
+        incrementedTable = hora.incrementDateTable(curDateTable, "PT4H")
         check(compareDateTables(curDateTable, curDateTableCopy), "hora.incrementDateTable fails: changes original table")
         check(hora.localDateToTimestamp(incrementedTable) - stamp == 14400, string.format("hora.incrementTable fails: adding four hours results in %d. Expected: %d", hora.localDateToTimestamp(incrementedTable), stamp + 14400))
-        local incrementedTable = hora.incrementDateTable(curDateTable, "P1D")
+        incrementedTable = hora.incrementDateTable(curDateTable, "P1D")
         check(compareDateTables(curDateTable, curDateTableCopy), "hora.incrementDateTable fails: changes original table")
         if incrementedTable.hour == curDateTable.hour + 1 then
             incrementedTable.hour = incrementedTable.hour - 1
@@ -129,10 +129,10 @@ for i, tz in ipairs(timezones) do
         local decrementedTable = hora.decrementDateTable(curDateTable, "PT1S")
         check(compareDateTables(curDateTable, curDateTableCopy), "hora.decrementDateTable fails: changes original table")
         check(hora.localDateToTimestamp(decrementedTable) - stamp == -1, string.format("hora.decrementTable fails: adding one second results in %d. Expected: %d", hora.localDateToTimestamp(decrementedTable), stamp -1))
-        local decrementedTable = hora.decrementDateTable(curDateTable, "PT4H")
+        decrementedTable = hora.decrementDateTable(curDateTable, "PT4H")
         check(compareDateTables(curDateTable, curDateTableCopy), "hora.decrementDateTable fails: changes original table")
         check(hora.localDateToTimestamp(decrementedTable) - stamp == -14400, string.format("hora.decrementTable fails: adding four hours results in %d. Expected: %d", hora.localDateToTimestamp(decrementedTable), stamp - 14400))
-        local decrementedTable = hora.decrementDateTable(curDateTable, "P1D")
+        decrementedTable = hora.decrementDateTable(curDateTable, "P1D")
         check(compareDateTables(curDateTable, curDateTableCopy), "hora.decrementDateTable fails: changes original table")
         if decrementedTable.hour == curDateTable.hour - 1 then
             decrementedTable.hour = decrementedTable.hour + 1
@@ -149,7 +149,6 @@ for i, tz in ipairs(timezones) do
         lastUTCDate = thisUTCDate
         lastISODate = thisISODate
         lastRFCDate = thisRFCDate
-        lastErrors  = errors
     end
 end
 
